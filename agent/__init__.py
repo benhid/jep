@@ -17,11 +17,11 @@ debug = logger.debug
 warning = logger.warning
 
 # celery
-RABBIT_HOST = os.getenv('RABBIT_HOST')
-RABBIT_PORT = os.getenv('RABBIT_PORT')
-RABBIT_USERNAME = os.getenv('RABBIT_USERNAME')
-RABBIT_PASSWORD = os.getenv('RABBIT_PASSWORD')
+CELERY_BROKER_HOST = os.getenv('CELERY_BROKER_HOST')
+CELERY_BROKER_PORT = os.getenv('CELERY_BROKER_PORT')
+CELERY_BROKER_USERNAME = os.getenv('CELERY_BROKER_USERNAME')
+CELERY_BROKER_PASSWORD = os.getenv('CELERY_BROKER_PASSWORD')
 
 celery_app = Celery('je-platform',
-                    broker=f'amqp://{RABBIT_USERNAME}:{RABBIT_PASSWORD}@{RABBIT_HOST}:{RABBIT_PORT}//',
+                    broker=f'amqp://{CELERY_BROKER_USERNAME}:{CELERY_BROKER_PASSWORD}@{CELERY_BROKER_HOST}:{CELERY_BROKER_PORT}//',
                     backend='amqp')

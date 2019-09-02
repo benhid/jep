@@ -106,8 +106,8 @@ venv.bak/
 # IDEA
 .idea
 
-# ticket persistence
-tickets.json
+# database
+db.json
 
 # logs
 *.log

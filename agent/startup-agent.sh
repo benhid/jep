@@ -4,10 +4,10 @@ set -e
 export EXECUTOR_PLATFORM_ID="jobs"
 export EXECUTOR_VERSION_ID="1"
 
-export RABBIT_HOST=${RABBIT_HOST:-127.0.0.1}
-export RABBIT_PORT=${RABBIT_PORT:-5672}
-export RABBIT_USERNAME=${RABBIT_USERNAME:-rabbit}
-export RABBIT_PASSWORD=${RABBIT_PASSWORD:-rabbit}
+export CELERY_BROKER_HOST=${CELERY_BROKER_HOST:-127.0.0.1}
+export CELERY_BROKER_PORT=${CELERY_BROKER_PORT:-5672}
+export CELERY_BROKER_USERNAME=${CELERY_BROKER_USERNAME:-rabbit}
+export CELERY_BROKER_PASSWORD=${CELERY_BROKER_PASSWORD:-rabbit}
 
 function capture ()
 {
@@ -27,7 +27,7 @@ trap "capture" 2
 
 # wait for connection
 echo [AGENT] Waiting for Rabbit instance
-agent/wait-for-it.sh "${RABBIT_HOST}:${RABBIT_PORT}" -t 10
+agent/wait-for-it.sh "${CELERY_BROKER_HOST}:${CELERY_BROKER_PORT}" -t 10
 
 # start worker on init
 echo [AGENT] Starting agent

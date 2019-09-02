@@ -41,8 +41,7 @@ def issue_ticket(request):
             'job_number': idx,
             'executed_on': time.time(),
             'status': run_local_script.status,
-            'return': str(run_local_script.result),
-            'type': 'text'
+            'return': str(run_local_script.result)
         })
 
     ticket = {
@@ -52,7 +51,6 @@ def issue_ticket(request):
         'ticket_id': ticket_id,
         'description': jobs,
         'status': 'PENDING',
-        'priority': 'LOW',
         'process_chain_list': process_chain_list,
         'progress': {
             'num_of_steps': len(jobs),  # total number of jobs
@@ -164,7 +162,7 @@ def notfound(request):
 
 
 if __name__ == '__main__':
-    database = TinyDB('./tickets.json')
+    database = TinyDB('./db.json')
 
     with Configurator() as config:
         # register database
