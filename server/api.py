@@ -13,8 +13,8 @@ from server import *
 
 
 @view_config(
-    route_name='run',
     renderer='json',
+    route_name='run',
     request_method='POST'
 )
 def issue_ticket(request):
@@ -36,7 +36,7 @@ def issue_ticket(request):
         debug('\tadding job to process chain list')
 
         process_chain_list.append({
-            'job_id': str(run_local_script.job_id),
+            'job_id': str(run_local_script.task_id),
             'job_name': job['name'],
             'job_number': idx,
             'executed_on': time.time(),
@@ -68,8 +68,8 @@ def issue_ticket(request):
 
 
 @view_config(
-    route_name='status',
     renderer='json',
+    route_name='status',
     request_method='GET'
 )
 def check_ticket(request):
@@ -117,8 +117,8 @@ def check_ticket(request):
 
 
 @view_config(
-    route_name='check',
     renderer='json',
+    route_name='check',
     request_method='GET'
 )
 def check_job(request):
@@ -137,8 +137,8 @@ def check_job(request):
 
 
 @view_config(
-    route_name='kill',
     renderer='json',
+    route_name='kill',
     request_method='POST'
 )
 def kill_job(request):
@@ -167,8 +167,6 @@ if __name__ == '__main__':
     database = TinyDB('./tickets.json')
 
     with Configurator() as config:
-        config.include('cors')
-
         # register database
         config.registry.db = database
 
@@ -181,5 +179,5 @@ if __name__ == '__main__':
 
         app = config.make_wsgi_app()
 
-    server = make_server(API_HOST, API_PORT, app)
+    server = make_server(API_HOST, int(API_PORT), app)
     server.serve_forever()

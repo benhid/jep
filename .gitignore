@@ -103,5 +103,11 @@ venv.bak/
 # mypy
 .mypy_cache/
 
+# IDEA
+.idea
+
 # ticket persistence
 tickets.json
+
+# logs
+*.log
