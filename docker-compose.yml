@@ -11,10 +11,9 @@ services:
     ports:
       - "15672:15672"
       - "5672:5672"
-
   flower:
     restart: always
-    image: iserko/docker-celery-flower
+    image: mher/flower
     ports:
       - "5555:5555"
     environment:
