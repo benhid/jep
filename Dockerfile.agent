@@ -1,0 +1,11 @@
+FROM python:3.7
+
+RUN mkdir -p /usr/src/worker
+WORKDIR /usr/src/worker
+
+COPY requirements.txt /usr/src/worker/
+
+RUN pip install -r requirements.txt
+COPY ./agent /usr/src/worker
+
+RUN agent/startup-agent.sh
