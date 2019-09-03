@@ -30,7 +30,7 @@ def issue_ticket(request):
         run_local_script = celery_app.signature(
             'run_local_script',
             kwargs={'msg': job['script']},
-            queue='jobs-1'
+            queue='jobs'
         ).delay()
 
         debug('\tadding job to process chain list')
@@ -175,6 +175,8 @@ if __name__ == '__main__':
     client = MongoClient(f'mongodb://{DATABASE_USERNAME}:{DATABASE_PASSWORD}@{DATABASE_HOST}:{DATABASE_PORT}/')
 
     with Configurator() as config:
+        config.include('server.cors')
+
         # register database
         config.registry.database = client['je-database']
 
