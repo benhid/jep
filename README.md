@@ -6,7 +6,7 @@ This repository provides core components of the platform, specifically:
 * REST API for managing jobs and
 * Agent (i.e., workers) for running jobs.
 
-This project requires a running RabbitMQ broker to work. You can run RabbitMQ and Flower using Docker Compose:
+This project requires a running RabbitMQ broker and an instance of MongoDB to work. You can run RabbitMQ, MongoDB and Flower using Docker Compose:
 
 ```console
 docker-compose up -d
@@ -30,7 +30,7 @@ Jobs are executed by Celery workers which must be initialized first:
 
 ## Run jobs
 
-To execute several Python scripts inline, use `/v2/run`:
+To execute several Python scripts inline, use the endpoint `/v2/run`:
 
 ```console
 curl -X POST \
@@ -38,7 +38,7 @@ curl -X POST \
   -d '[{ "name":"say hello", "script":"print('\''hello'\'')"}, {"name":"print env", "script":"import os; print(os.environ['\''HOME'\''])"}]'
 ```
 
-You can use the ticket id provided in the response's body to check the status of a workflow:
+You can use the ticket id (`ticket_id`) provided in the response's body to check the status of a workflow:
 
 ```console
 curl -X GET \

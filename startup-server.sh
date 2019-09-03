@@ -1,8 +1,8 @@
 #!/bin/bash
 set -e
 
-export API_HOST="0.0.0.0"
-export API_PORT="6565"
+export API_HOST=0.0.0.0
+export API_PORT=6565
 
 export DATABASE_HOST=${DATABASE_HOST:-127.0.0.1}
 export DATABASE_PORT=${DATABASE_PORT:-27017}

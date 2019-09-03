@@ -1,8 +1,8 @@
 #!/bin/bash
 set -e
 
-export EXECUTOR_PLATFORM_ID="jobs"
-export EXECUTOR_VERSION_ID="1"
+export EXECUTOR_PLATFORM_ID="JEplatform"
+export EXECUTOR_VERSION_ID="1.0"
 
 export CELERY_BROKER_HOST=${CELERY_BROKER_HOST:-127.0.0.1}
 export CELERY_BROKER_PORT=${CELERY_BROKER_PORT:-5672}
@@ -31,7 +31,7 @@ echo [AGENT] Waiting for Rabbit instance
 
 # start worker on init
 echo [AGENT] Starting agent
-celery worker -A agent.agent -Q "${EXECUTOR_PLATFORM_ID}-${EXECUTOR_VERSION_ID}" --loglevel=INFO --logfile="./agent.log" --detach
+celery worker -A worker.agent -n "${EXECUTOR_PLATFORM_ID}-${EXECUTOR_VERSION_ID}" -Q "jobs" --loglevel=INFO --logfile="./agent.log" --detach
 
 sleep 5
 

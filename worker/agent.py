@@ -3,7 +3,7 @@ import subprocess
 
 from celery.signals import worker_ready
 
-from agent import info, celery_app
+from worker import info, celery_app
 
 
 @worker_ready.connect
