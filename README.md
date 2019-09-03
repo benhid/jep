@@ -1,4 +1,4 @@
-# JE platform 💀
+![JE platform logo](/assets/logo.png)
 
 Multipurpose jobs executor platform based on Celery. 
 This repository provides core components of the platform, specifically:
@@ -15,8 +15,8 @@ docker-compose up -d
 To startup the server, run:
 
 ```console
-# chmod +x server/startup-server.sh
-server/startup-server.sh
+# chmod +x startup-server.sh wait-for-it.sh
+./startup-server.sh
 ```
 
 ## Agents
@@ -24,8 +24,8 @@ server/startup-server.sh
 Jobs are executed by Celery workers which must be initialized first:
 
 ```console
-# chmod +x agent/startup-agent.sh agent/wait-for-it.sh
-agent/startup-agent.sh
+# chmod +x startup-agent.sh wait-for-it.sh
+./startup-agent.sh
 ```
 
 ## Run jobs
