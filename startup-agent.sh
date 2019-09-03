@@ -27,12 +27,12 @@ trap "capture" 2
 
 # wait for connection
 echo [AGENT] Waiting for Rabbit instance
-scripts/wait-for-it.sh "${CELERY_BROKER_HOST}:${CELERY_BROKER_PORT}" -t 10
+./wait-for-it.sh "${CELERY_BROKER_HOST}:${CELERY_BROKER_PORT}" -t 10
 
 # start worker on init
 echo [AGENT] Starting agent
-celery worker -A agent.agent -Q "${EXECUTOR_PLATFORM_ID}-${EXECUTOR_VERSION_ID}" --loglevel=INFO --logfile="scripts/agent.log" --detach
+celery worker -A agent.agent -Q "${EXECUTOR_PLATFORM_ID}-${EXECUTOR_VERSION_ID}" --loglevel=INFO --logfile="./agent.log" --detach
 
 sleep 5
 
-tail -f scripts/agent.log
+tail -f ./agent.log

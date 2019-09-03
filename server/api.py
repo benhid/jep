@@ -2,12 +2,12 @@ import time
 from wsgiref.simple_server import make_server
 
 from celery.result import AsyncResult
+from pymongo import MongoClient
 from pyramid.config import Configurator
 from pyramid.httpexceptions import HTTPBadRequest
 from pyramid.response import Response
 from pyramid.view import notfound_view_config
 from pyramid.view import view_config
-from tinydb import TinyDB, Query
 
 from server import *
 
@@ -59,8 +59,13 @@ def issue_ticket(request):
     }
 
     # insert to database
-    debug('\tinserting ticket to db')
-    request.registry.db.insert(ticket)
+    database = request.registry.database
+    document = database.tickets.insert_one(ticket)
+
+    debug(f'\tstored ticket {document.inserted_id}')
+
+    # serialize ObjectId
+    ticket['_id'] = str(ticket['_id'])
 
     return ticket
 
@@ -77,8 +82,9 @@ def check_ticket(request):
     ticket_id = request.GET.get('ticket_id', None)
     debug(f'retrieving ticket id {ticket_id}')
 
-    q = Query()
-    ticket = request.registry.db.get(q.ticket_id == ticket_id)
+    # find by id
+    database = request.registry.database
+    ticket = database.tickets.find_one({'ticket_id': ticket_id})
 
     if ticket:
         step = 0
@@ -100,6 +106,7 @@ def check_ticket(request):
 
         ticket['updated_on'] = time.time()
         ticket['progress']['step'] = step
+        ticket['api_info'] = {'method': 'GET', 'endpoint': API_HOST, 'path': '/v2/status'}
 
         if step == ticket['progress']['num_of_steps']:
             if any(operator['status'] == 'FAILURE' for operator in ticket['process_chain_list']):
@@ -107,9 +114,12 @@ def check_ticket(request):
             else:
                 ticket['status'] = 'SUCCESS'
 
-        request.registry.db.write_back([ticket])
+        database.tickets.replace_one({'ticket_id': ticket_id}, ticket)
     else:
         raise HTTPBadRequest(f'ticket {ticket_id} not found')
+
+    # serialize ObjectId
+    ticket['_id'] = str(ticket['_id'])
 
     return ticket
 
@@ -162,11 +172,11 @@ def notfound(request):
 
 
 if __name__ == '__main__':
-    database = TinyDB('./db.json')
+    client = MongoClient(f'mongodb://{DATABASE_USERNAME}:{DATABASE_PASSWORD}@{DATABASE_HOST}:{DATABASE_PORT}/')
 
     with Configurator() as config:
         # register database
-        config.registry.db = database
+        config.registry.database = client['je-database']
 
         # add routes
         config.add_route('run', '/v2/run')

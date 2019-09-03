@@ -5,9 +5,9 @@ services:
     restart: always
     image: "rabbitmq:3-management"
     environment:
-      RABBITMQ_DEFAULT_USER: "rabbit"
-      RABBITMQ_DEFAULT_PASS: "rabbit"
-      RABBITMQ_DEFAULT_VHOST: "/"
+      RABBITMQ_DEFAULT_USER: rabbit
+      RABBITMQ_DEFAULT_PASS: rabbit
+      RABBITMQ_DEFAULT_VHOST: /
     ports:
       - "15672:15672"
       - "5672:5672"
@@ -24,3 +24,11 @@ services:
       - --broker_api=http://rabbit:rabbit@rabbit:15672/api/
     depends_on:
       - rabbit
+  mongo:
+    restart: always
+    image: mongo:4.2.0-bionic
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: root
