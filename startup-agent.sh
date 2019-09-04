@@ -9,10 +9,18 @@ export CELERY_BROKER_PORT=${CELERY_BROKER_PORT:-5672}
 export CELERY_BROKER_USERNAME=${CELERY_BROKER_USERNAME:-rabbit}
 export CELERY_BROKER_PASSWORD=${CELERY_BROKER_PASSWORD:-rabbit}
 
+AGENT_NAME="$1"
+
+# check if file exists
+if [ ! -f "./worker/${AGENT_NAME}.py" ]; then
+    echo "[AGENT] Agent ${AGENT_NAME} was not found inside /worker"
+    exit 1
+fi
+
 function capture ()
 {
-    echo [AGENT] Shutting down agent...
-    pkill -f "celery worker -A worker.agent"
+    echo [AGENT] Shutting down agent "$AGENT_NAME"...
+    pkill -f "celery worker -A worker.${AGENT_NAME}"
 
     echo [AGENT] Deleting celeryd.pid file...
     rm -f ./celeryd.pid
@@ -33,9 +41,9 @@ echo [AGENT] Waiting for Rabbit instance
 ./wait-for-it.sh "${CELERY_BROKER_HOST}:${CELERY_BROKER_PORT}" -t 60
 
 # start worker on init
-echo [AGENT] Starting agent
-celery worker -A worker.agent -n "${EXECUTOR_PLATFORM_ID}-${EXECUTOR_VERSION_ID}" -Q "jobs" --loglevel=INFO --logfile="./agent.log" --detach
+echo [AGENT] Starting agent "$AGENT_NAME"
+celery worker -A worker."$AGENT_NAME" -n "${EXECUTOR_PLATFORM_ID}-${EXECUTOR_VERSION_ID}" -Q "jobs" --loglevel=INFO --logfile="./${AGENT_NAME}-agent.log" --detach
 
 sleep 5
 
-tail -f ./agent.log
+tail -f ./${AGENT_NAME}-agent.log

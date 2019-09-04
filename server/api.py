@@ -25,23 +25,28 @@ def issue_ticket(request):
     debug(f'ticket id {ticket_id}')
 
     for idx, job in enumerate(jobs):
-        debug(f'\trunning job {job["name"]}')
+        job_code = job["task"]
+        job_name = job["name"]
+        job_data = job["data"]
 
-        run_local_script = celery_app.signature(
-            'run_local_script',
-            kwargs={'msg': job['script']},
+        debug(f'\trunning job {job_name}')
+
+        task = celery_app.signature(
+            job_code,
+            kwargs={'data': job_data},
             queue='jobs'
         ).delay()
 
         debug('\tadding job to process chain list')
 
         process_chain_list.append({
-            'job_id': str(run_local_script.task_id),
-            'job_name': job['name'],
+            'job_id': str(task.task_id),
+            'job_code': job_code,
+            'job_name': job_name,
             'job_number': idx,
             'executed_on': time.time(),
-            'status': run_local_script.status,
-            'return': str(run_local_script.result)
+            'status': task.status,
+            'return': str(task.result)
         })
 
     ticket = {

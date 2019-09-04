@@ -21,21 +21,39 @@ To startup the server, run:
 
 ## Agents
 
-Jobs are executed by Celery workers which must be initialized first:
+Jobs are executed by Celery workers. `startup-server` is a convenient script to start a worker within the [worker](worker) folder: 
 
 ```console
-# chmod +x startup-agent.sh wait-for-it.sh
-./startup-agent.sh
+# chmod +x startup-agent.sh
+./startup-agent.sh <filename_of_worker>
 ```
 
 ## Run jobs
 
-To execute several Python scripts inline, use the endpoint `/v2/run`:
+To execute jobs, use the POST endpoint `/v2/run` with a body as follows:
+
+```json
+[
+    {
+        "task":"name_of_the_task",
+        "name":"brief description or identifier of the task",
+        "data":"required metadata to run the task"
+    }
+]
+```
+
+For example, to run several Python scripts inline start the [pyexecutor](worker/pyexecutor.py) worker:
+
+```console
+./startup-agent.sh pyexecutor
+```
+
+Then, send a POST request to the `/v2/run` endpoint with the following body:
 
 ```console
 curl -X POST \
   http://localhost:6565/v2/run \
-  -d '[{ "name":"say hello", "script":"print('\''hello'\'')"}, {"name":"print env", "script":"import os; print(os.environ['\''HOME'\''])"}]'
+  -d '[{ "task":"run_local_script", "name":"say hello", "data":"print('\''hello'\'')"}, {"task":"run_local_script", "name":"print env", "script":"import os; print(os.environ['\''HOME'\''])"}]'
 ```
 
 You can use the ticket id (`ticket_id`) provided in the response's body to check the status of a workflow:

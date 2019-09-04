@@ -21,9 +21,9 @@ def register_agent(sender, **k):
 
 
 @celery_app.task(name='run_local_script', default_retry_delay=2, max_retries=3, acks_late=True, bind=True)
-def process_script(self, msg):
+def process_script(self, data):
     try:
-        pcs = execute(f'python -c "{msg}"')
+        pcs = execute(f'python -c "{data}"')
         result = pcs.stdout
     except Exception:
         raise
@@ -35,9 +35,9 @@ def process_script(self, msg):
 
 
 @celery_app.task(name='run_local_file', default_retry_delay=2, max_retries=3, acks_late=True, bind=True)
-def process_file(self, msg):
+def process_file(self, data):
     try:
-        pcs = execute(f'python "{msg}"')
+        pcs = execute(f'python "{data}"')
         result = pcs.stdout
     except Exception:
         raise
@@ -54,7 +54,7 @@ def execute(command: str):
                          universal_newlines=True,
                          shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-    info(f'task returned {pcs.returncode}')
+    info(f'job returned {pcs.returncode}')
     info(f'output stdout {pcs.stdout}')
     info(f'output stderr {pcs.stderr}')
 
