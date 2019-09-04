@@ -12,7 +12,10 @@ export CELERY_BROKER_PASSWORD=${CELERY_BROKER_PASSWORD:-rabbit}
 function capture ()
 {
     echo [AGENT] Shutting down agent...
-    pkill -f "celery worker -A agent.agent"
+    pkill -f "celery worker -A worker.agent"
+
+    echo [AGENT] Deleting celeryd.pid file...
+    rm -f ./celeryd.pid
 
     echo [AGENT] ...OK
 
@@ -27,7 +30,7 @@ trap "capture" 2
 
 # wait for connection
 echo [AGENT] Waiting for Rabbit instance
-./wait-for-it.sh "${CELERY_BROKER_HOST}:${CELERY_BROKER_PORT}" -t 10
+./wait-for-it.sh "${CELERY_BROKER_HOST}:${CELERY_BROKER_PORT}" -t 60
 
 # start worker on init
 echo [AGENT] Starting agent
