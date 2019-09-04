@@ -11,6 +11,19 @@ services:
     ports:
       - "15672:15672"
       - "5672:5672"
+  redis:
+    restart: always
+    image: redis:5.0.5-alpine
+    ports:
+      - "6379:6379"
+  mongo:
+    restart: always
+    image: mongo:4.2.0-bionic
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: root
   flower:
     restart: always
     image: mher/flower
@@ -24,11 +37,3 @@ services:
       - --broker_api=http://rabbit:rabbit@rabbit:15672/api/
     depends_on:
       - rabbit
-  mongo:
-    restart: always
-    image: mongo:4.2.0-bionic
-    ports:
-      - "27017:27017"
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: root

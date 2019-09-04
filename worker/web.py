@@ -19,7 +19,7 @@ def register_agent(sender, **k):
     return f'agent joined on queue {executor_platform_id}-{executor_version_id}'
 
 
-@celery_app.task(name='read_from_web', default_retry_delay=2, max_retries=3, acks_late=True, bind=True)
+@celery_app.task(name='read_from_web', track_started=True, default_retry_delay=2, max_retries=3, acks_late=True, bind=True)
 def process_script(self, data):
     try:
         web = urlopen(data)

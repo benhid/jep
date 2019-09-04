@@ -1,6 +1,7 @@
 import os
 import subprocess
 
+from celery import states
 from celery.signals import worker_ready
 
 from worker import info, celery_app
@@ -20,12 +21,13 @@ def register_agent(sender, **k):
     return f'agent joined on queue {executor_platform_id}-{executor_version_id}'
 
 
-@celery_app.task(name='run_local_script', default_retry_delay=2, max_retries=3, acks_late=True, bind=True)
+@celery_app.task(name='run_local_script', track_started=True, default_retry_delay=2, max_retries=3, acks_late=True, bind=True)
 def process_script(self, data):
     try:
         pcs = execute(f'python -c "{data}"')
         result = pcs.stdout
     except Exception:
+        self.update_state(state=states.FAILURE, meta={'custom': '...'})
         raise
 
     def on_failure(self, *args, **kwargs):
@@ -34,12 +36,13 @@ def process_script(self, data):
     return result.splitlines()
 
 
-@celery_app.task(name='run_local_file', default_retry_delay=2, max_retries=3, acks_late=True, bind=True)
+@celery_app.task(name='run_local_file', track_started=True, default_retry_delay=2, max_retries=3, acks_late=True, bind=True)
 def process_file(self, data):
     try:
         pcs = execute(f'python "{data}"')
         result = pcs.stdout
     except Exception:
+        self.update_state(state=states.FAILURE, meta={'custom': '...'})
         raise
 
     def on_failure(self, *args, **kwargs):

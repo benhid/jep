@@ -22,6 +22,11 @@ CELERY_BROKER_PORT = os.environ['CELERY_BROKER_PORT']
 CELERY_BROKER_USERNAME = os.environ['CELERY_BROKER_USERNAME']
 CELERY_BROKER_PASSWORD = os.environ['CELERY_BROKER_PASSWORD']
 
+CELERY_DB_HOST = os.environ['CELERY_DB_HOST']
+CELERY_DB_PORT = os.environ['CELERY_DB_PORT']
+CELERY_DB_USERNAME = os.environ['CELERY_DB_USERNAME']
+CELERY_DB_PASSWORD = os.environ['CELERY_DB_PASSWORD']
+
 celery_app = Celery('je-platform',
                     broker=f'amqp://{CELERY_BROKER_USERNAME}:{CELERY_BROKER_PASSWORD}@{CELERY_BROKER_HOST}:{CELERY_BROKER_PORT}//',
-                    backend='rpc')
+                    backend=f'redis://{CELERY_DB_HOST}:{CELERY_DB_PORT}/0')

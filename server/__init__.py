@@ -21,10 +21,10 @@ API_HOST = os.environ['API_HOST']
 API_PORT = os.environ['API_PORT']
 
 # mongo
-DATABASE_HOST = os.environ['DATABASE_HOST']
-DATABASE_PORT = os.environ['DATABASE_PORT']
-DATABASE_USERNAME = os.environ['DATABASE_USERNAME']
-DATABASE_PASSWORD = os.environ['DATABASE_PASSWORD']
+API_DB_HOST = os.environ['API_DB_HOST']
+API_DB_PORT = os.environ['API_DB_PORT']
+API_DB_USERNAME = os.environ['API_DB_USERNAME']
+API_DB_PASSWORD = os.environ['API_DB_PASSWORD']
 
 # celery
 CELERY_BROKER_HOST = os.environ['CELERY_BROKER_HOST']
@@ -32,6 +32,11 @@ CELERY_BROKER_PORT = os.environ['CELERY_BROKER_PORT']
 CELERY_BROKER_USERNAME = os.environ['CELERY_BROKER_USERNAME']
 CELERY_BROKER_PASSWORD = os.environ['CELERY_BROKER_PASSWORD']
 
+CELERY_DB_HOST = os.environ['CELERY_DB_HOST']
+CELERY_DB_PORT = os.environ['CELERY_DB_PORT']
+CELERY_DB_USERNAME = os.environ['CELERY_DB_USERNAME']
+CELERY_DB_PASSWORD = os.environ['CELERY_DB_PASSWORD']
+
 celery_app = Celery('je-platform',
                     broker=f'amqp://{CELERY_BROKER_USERNAME}:{CELERY_BROKER_PASSWORD}@{CELERY_BROKER_HOST}:{CELERY_BROKER_PORT}//',
-                    backend='rpc')
+                    backend=f'redis://{CELERY_DB_HOST}:{CELERY_DB_PORT}/0')

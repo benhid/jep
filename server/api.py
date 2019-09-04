@@ -1,5 +1,6 @@
 import time
 from wsgiref.simple_server import make_server
+from celery import states
 
 from celery.result import AsyncResult
 from pymongo import MongoClient
@@ -45,7 +46,7 @@ def issue_ticket(request):
             'job_name': job_name,
             'job_number': idx,
             'executed_on': time.time(),
-            'status': task.status,
+            'state': str(task.status),
             'return': str(task.result)
         })
 
@@ -53,9 +54,10 @@ def issue_ticket(request):
         'api_info': {'method': 'POST', 'endpoint': API_HOST, 'path': '/v2/run'},
         'created_on': time.time(),
         'updated_on': time.time(),
+        'last_access': None,
         'ticket_id': ticket_id,
         'description': jobs,
-        'status': 'PENDING',
+        'state': states.PENDING,
         'process_chain_list': process_chain_list,
         'progress': {
             'num_of_steps': len(jobs),  # total number of jobs
@@ -92,32 +94,41 @@ def check_ticket(request):
     ticket = database.tickets.find_one({'ticket_id': ticket_id})
 
     if ticket:
-        step = 0
-
-        for job in ticket['process_chain_list']:
-            job_id = job['job_id']
-            result = AsyncResult(job_id)
-
-            try:
-                job['status'] = str(result.state)
-            except ConnectionResetError as e:
-                raise e
-
-            if result.status == 'SUCCESS' or result.status == 'FAILURE':
-                job['return'] = str(result.result)
-
-            if result.state != 'PENDING':
-                step += 1
-
+        # update times
+        ticket['last_access'] = ticket['updated_on']
         ticket['updated_on'] = time.time()
-        ticket['progress']['step'] = step
+
+        # update API info
         ticket['api_info'] = {'method': 'GET', 'endpoint': API_HOST, 'path': '/v2/status'}
 
+        # update progress
+        jobs = ticket['process_chain_list']
+        step = 0
+
+        for job in jobs:
+            id = job['job_id']
+            task = AsyncResult(id)
+
+            try:
+                result = task.result
+                state = task.status
+            except ConnectionResetError:
+                raise
+
+            job['state'] = state
+
+            if state == states.SUCCESS or state == states.FAILURE:
+                job['return'] = result
+                step += 1
+
+        # set current step number
+        ticket['progress']['step'] = step
+
         if step == ticket['progress']['num_of_steps']:
-            if any(operator['status'] == 'FAILURE' for operator in ticket['process_chain_list']):
-                ticket['status'] = 'FAILURE'
+            if any(job['state'] == states.FAILURE for job in jobs):
+                ticket['state'] = states.FAILURE
             else:
-                ticket['status'] = 'SUCCESS'
+                ticket['state'] = states.SUCCESS
 
         database.tickets.replace_one({'ticket_id': ticket_id}, ticket)
     else:
@@ -177,7 +188,7 @@ def notfound(request):
 
 
 if __name__ == '__main__':
-    client = MongoClient(f'mongodb://{DATABASE_USERNAME}:{DATABASE_PASSWORD}@{DATABASE_HOST}:{DATABASE_PORT}/')
+    client = MongoClient(f'mongodb://{API_DB_USERNAME}:{API_DB_PASSWORD}@{API_DB_HOST}:{API_DB_PORT}/')
 
     with Configurator() as config:
         config.include('server.cors')
@@ -194,5 +205,8 @@ if __name__ == '__main__':
 
         app = config.make_wsgi_app()
 
-    server = make_server(API_HOST, int(API_PORT), app)
-    server.serve_forever()
+    try:
+        server = make_server(API_HOST, int(API_PORT), app)
+        server.serve_forever()
+    except KeyboardInterrupt:
+        pass
