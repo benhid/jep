@@ -27,8 +27,8 @@ function capture ()
     echo [AGENT] Shutting down agent "$AGENT_NAME"...
     pkill -f "celery worker -A worker.${AGENT_NAME}"
 
-    echo [AGENT] Deleting celeryd.pid file...
-    rm -f ./celeryd.pid
+    echo [AGENT] Deleting ${AGENT_NAME}.celeryd.pid file...
+    rm -f ./${AGENT_NAME}.celeryd.pid
 
     echo [AGENT] ...OK
 
@@ -48,8 +48,15 @@ echo [AGENT] Waiting for Rabbit instance
 
 # start worker on init
 echo [AGENT] Starting agent "$AGENT_NAME"
-celery worker -A worker."$AGENT_NAME" -n "${EXECUTOR_PLATFORM_ID}-${EXECUTOR_VERSION_ID}" -Q "jobs" --loglevel=INFO --logfile="./${AGENT_NAME}-agent.log" --detach
+celery worker \
+    -A worker."$AGENT_NAME" \
+    -Q "jobs" \
+    -n "${EXECUTOR_PLATFORM_ID}-${EXECUTOR_VERSION_ID}-${AGENT_NAME}" \
+    --pidfile="./${AGENT_NAME}.celeryd.pid" \
+    --loglevel=INFO \
+    --logfile="./${AGENT_NAME}.celeryd.log" \
+    --detach
 
 sleep 5
 
-tail -f ./${AGENT_NAME}-agent.log
+tail -f ./${AGENT_NAME}.celeryd.log
