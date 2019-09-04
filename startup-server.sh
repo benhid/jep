@@ -30,7 +30,8 @@ trap "capture" 2
 
 # wait for connection
 echo [SERVER] Waiting for Rabbit instance
-./wait-for-it.sh "${CELERY_BROKER_HOST}:${CELERY_BROKER_PORT}" -t 10
+./wait-for-it.sh "${CELERY_BROKER_HOST}:${CELERY_BROKER_PORT}" -t 60
+./wait-for-it.sh "${DATABASE_HOST}:${DATABASE_PORT}" -t 60
 
 # start server on init
 echo [SERVER] Running server
