@@ -42,10 +42,10 @@ To execute jobs, use the POST endpoint `/v2/run` with a body as follows:
 ]
 ```
 
-For example, to run several Python scripts inline start the [pyexecutor](worker/pyexecutor.py) worker:
+For example, to run several Python scripts inline start the [executor](worker/executor.py) worker:
 
 ```console
-./startup-agent.sh pyexecutor
+./startup-agent.sh executor
 ```
 
 Then, send a POST request to the `/v2/run` endpoint with the following body:
@@ -53,7 +53,7 @@ Then, send a POST request to the `/v2/run` endpoint with the following body:
 ```console
 curl -X POST \
   http://localhost:6565/v2/run \
-  -d '[{ "task":"run_local_script", "name":"say hello", "data":"print('\''hello'\'')"}, {"task":"run_local_script", "name":"print env", "script":"import os; print(os.environ['\''HOME'\''])"}]'
+  -d '[{ "task":"run_script_py", "name":"say hello", "data":"print('\''hello'\'')"}, {"task":"run_local_script", "name":"print env", "script":"import os; print(os.environ['\''HOME'\''])"}]'
 ```
 
 You can use the ticket id (`ticket_id`) provided in the response's body to check the status of a workflow:

@@ -1,7 +1,7 @@
 version: '3'
 
 services:
-  rabbit:
+  je-rabbit:
     restart: always
     image: "rabbitmq:3-management"
     environment:
@@ -11,12 +11,12 @@ services:
     ports:
       - "15672:15672"
       - "5672:5672"
-  redis:
+  je-redis:
     restart: always
     image: redis:5.0.5-alpine
     ports:
       - "6379:6379"
-  mongo:
+  je-mongo:
     restart: always
     image: mongo:4.2.0-bionic
     ports:
@@ -24,7 +24,7 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: root
-  flower:
+  je-flower:
     restart: always
     image: mher/flower
     ports:

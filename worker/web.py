@@ -1,7 +1,9 @@
 import os
-
-from celery.signals import worker_ready
 from urllib.request import urlopen
+
+from celery import states
+from celery.signals import worker_ready
+
 from worker import celery_app
 
 
@@ -25,6 +27,7 @@ def process_script(self, data):
         web = urlopen(data)
         result = web.read()
     except Exception:
+        self.update_state(state=states.FAILURE, meta={'Exception': data})
         raise
 
     def on_failure(self, *args, **kwargs):

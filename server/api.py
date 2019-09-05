@@ -1,7 +1,7 @@
 import time
 from wsgiref.simple_server import make_server
-from celery import states
 
+from celery import states
 from celery.result import AsyncResult
 from pymongo import MongoClient
 from pyramid.config import Configurator
@@ -177,7 +177,7 @@ def kill_job(request):
     return {
         'api_info': {'method': 'POST', 'endpoint': API_HOST, 'path': '/v2/kill'},
         'job_id': job_id,
-        'status': 'REVOKED',
+        'status': states.REVOKED,
         'result': None
     }
 
