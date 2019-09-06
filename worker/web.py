@@ -1,4 +1,5 @@
 import os
+from urllib.error import URLError
 from urllib.request import urlopen
 
 from celery import states
@@ -21,13 +22,16 @@ def register_agent(sender, **k):
     return f'agent joined on queue {executor_platform_id}-{executor_version_id}'
 
 
-@celery_app.task(name='read_from_web', track_started=True, default_retry_delay=2, max_retries=3, acks_late=True, bind=True)
+@celery_app.task(name='open_web', track_started=True, default_retry_delay=2, max_retries=3, acks_late=True, bind=True)
 def process_script(self, data):
     try:
         web = urlopen(data)
         result = web.read()
-    except Exception:
-        self.update_state(state=states.FAILURE, meta={'Exception': data})
+    except ValueError:
+        self.update_state(state=states.FAILURE, meta={'exception': 'URL not well formatted', 'url': data})
+        raise
+    except URLError:
+        self.update_state(state=states.FAILURE, meta={'exception': 'URL do not seem to be alive', 'url': data})
         raise
 
     def on_failure(self, *args, **kwargs):

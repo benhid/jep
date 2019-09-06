@@ -42,7 +42,7 @@ def process_file(self, data):
         pcs = execute(f'python "{data}"')
         result = pcs.stdout
     except Exception:
-        self.update_state(state=states.FAILURE, meta={'Exception': f'python "{data}"'})
+        self.update_state(state=states.FAILURE, meta={'exception': f'python "{data}"'})
         raise
 
     def on_failure(self, *args, **kwargs):
