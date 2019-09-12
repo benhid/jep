@@ -19,6 +19,7 @@ warning = logger.warning
 # server env variables
 API_HOST = os.environ['API_HOST']
 API_PORT = os.environ['API_PORT']
+API_KEY = os.environ['API_KEY']
 
 # mongo
 API_DB_HOST = os.environ['API_DB_HOST']

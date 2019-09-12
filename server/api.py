@@ -11,24 +11,29 @@ from pyramid.view import notfound_view_config
 from pyramid.view import view_config
 
 from server import *
+from server.security import requires_api_key
 
 
 @view_config(
     renderer='json',
     route_name='run',
-    request_method='POST'
+    request_method='POST',
+    decorator=requires_api_key
 )
 def issue_ticket(request):
     jobs = request.json_body
     ticket_id = str(int(time.time()))
     process_chain_list = []
 
-    debug(f'ticket id {ticket_id}')
+    debug(f'new ticket id {ticket_id}')
 
     for idx, job in enumerate(jobs):
-        job_code = job["task"]
-        job_name = job["name"]
-        job_data = job["data"]
+        try:
+            job_code = job["task"]
+            job_name = job["name"]
+            job_data = job["data"]
+        except Exception:
+            raise
 
         debug(f'\trunning job {job_name}')
 
@@ -110,7 +115,7 @@ def check_ticket(request):
             task = AsyncResult(id)
 
             try:
-                result = task.result
+                result = str(task.result)
                 state = task.status
             except ConnectionResetError:
                 raise
@@ -163,7 +168,8 @@ def check_job(request):
 @view_config(
     renderer='json',
     route_name='kill',
-    request_method='POST'
+    request_method='POST',
+    decorator=requires_api_key
 )
 def kill_job(request):
     """
@@ -180,6 +186,15 @@ def kill_job(request):
         'status': states.REVOKED,
         'result': None
     }
+
+
+@view_config(
+    renderer='json',
+    route_name='health',
+    request_method='GET'
+)
+def health(request):
+    return Response(status=200)
 
 
 @notfound_view_config()
@@ -201,12 +216,15 @@ if __name__ == '__main__':
         config.add_route('status', '/v2/status')
         config.add_route('check', '/v2/check')
         config.add_route('kill', '/v2/kill')
+        config.add_route('health', '/v2/health')
         config.scan()
 
         app = config.make_wsgi_app()
 
+    server = make_server(API_HOST, int(API_PORT), app)
+    info(f'server at {API_HOST}:{API_PORT}')
+
     try:
-        server = make_server(API_HOST, int(API_PORT), app)
         server.serve_forever()
     except KeyboardInterrupt:
         pass

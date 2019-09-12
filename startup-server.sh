@@ -3,6 +3,7 @@ set -e
 
 export API_HOST=0.0.0.0
 export API_PORT=6565
+export API_KEY=CD3DC6F9EC4FCACB9A791CD7D43DD
 
 export API_DB_HOST=${API_DB_HOST:-127.0.0.1}
 export API_DB_PORT=${API_DB_PORT:-27017}
@@ -36,7 +37,6 @@ trap "capture" 2
 # wait for connection
 echo [SERVER] Waiting for Rabbit instance
 ./wait-for-it.sh "${CELERY_BROKER_HOST}:${CELERY_BROKER_PORT}" -t 60
-./wait-for-it.sh "${CELERY_DB_HOST}:${CELERY_DB_PORT}" -t 60
 ./wait-for-it.sh "${API_DB_HOST}:${API_DB_PORT}" -t 60
 
 # start server on init
