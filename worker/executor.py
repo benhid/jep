@@ -27,7 +27,7 @@ def process_script(self, data):
         pcs = execute(f'python -c "{data}"')
         result = pcs.stdout
     except Exception:
-        self.update_state(state=states.FAILURE, meta={'Exception': f'python -c "{data}"'})
+        self.update_state(state=states.FAILURE, meta={'exception': f'python -c "{data}"', 'script': data})
         raise
 
     def on_failure(self, *args, **kwargs):
@@ -42,7 +42,7 @@ def process_file(self, data):
         pcs = execute(f'python "{data}"')
         result = pcs.stdout
     except Exception:
-        self.update_state(state=states.FAILURE, meta={'exception': f'python "{data}"'})
+        self.update_state(state=states.FAILURE, meta={'exception': f'python "{data}"', 'filename': data})
         raise
 
     def on_failure(self, *args, **kwargs):
