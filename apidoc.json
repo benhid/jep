@@ -1,0 +1,7 @@
+{
+  "name": "JE Platform",
+  "version": "0.1.0",
+  "description": "Multipurpose jobs executor platform based on Celery",
+  "title": "Multipurpose jobs executor platform based on Celery",
+  "url" : "http://192.168.213.61"
+}

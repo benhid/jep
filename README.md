@@ -10,14 +10,14 @@ This project requires a running RabbitMQ broker and an instance of MongoDB and R
 You can run RabbitMQ, MongoDB, Redis and Flower using Docker Compose:
 
 ```console
-docker-compose up -d
+$ docker-compose up -d
 ``` 
 
 To startup the server, run:
 
 ```console
 # chmod +x startup-server.sh wait-for-it.sh
-./startup-server.sh
+$ ./startup-server.sh
 ```
 
 ## Agents
@@ -26,7 +26,7 @@ Jobs are executed by Celery workers. `startup-server` is a convenient script to 
 
 ```console
 # chmod +x startup-agent.sh
-./startup-agent.sh <filename_of_worker>
+$ ./startup-agent.sh <filename_of_worker>
 ```
 
 ## Run jobs
@@ -36,8 +36,8 @@ To execute jobs, use the POST endpoint `/v2/run` with a body as follows:
 ```json
 [
     {
-        "task":"name_of_the_task",
-        "name":"brief description or identifier of the task",
+        "task":"task id",
+        "name":"brief description or identifier of the job",
         "data":"required metadata to run the task"
     }
 ]
@@ -46,21 +46,19 @@ To execute jobs, use the POST endpoint `/v2/run` with a body as follows:
 For example, the [executor](worker/executor.py) worker will be used to run Python scrips:
 
 ```console
-./startup-agent.sh executor
+$ ./startup-agent.sh executor
 ```
 
-Send a POST request to the `/v2/run` endpoint with the following body:
+## Generate documentation
+
+Install APIDOC as follows:
 
 ```console
-curl -X POST \
-  http://localhost:6565/v2/run \
-  -H 'x-api-key: CD3DC6F9EC4FCACB9A791CD7D43DD' \
-  -d '[{ "task":"run_script_py", "name":"say hello", "data":"print('\''hello'\'')"}, {"task":"run_script_py", "name":"print env", "data":"import os; print(os.environ['\''HOME'\''])"}]'
+$ npm install apidoc -g
 ```
 
-You can use the ticket id (`ticket_id`) provided in the response's body to check the status of a workflow:
+And then run:
 
 ```console
-curl -X GET \
-  'http://localhost:6565/v2/status?ticket_id=<ticket_id>'
+$ apidoc -i server/ -o /server/doc
 ```
