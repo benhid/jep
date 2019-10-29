@@ -574,7 +574,7 @@
       "examples": [
         {
           "title": "Success body example:",
-          "content": "HTTP/1.1 200 OK\n{\n  \"_id\": \"5daf1da2a9f541a00597db3a\",\n  \"api_info\": {\n    \"method\": \"GET\",\n    \"endpoint\": \"0.0.0.0\",\n    \"path\": \"/v2/status\"\n  },\n  \"created_on\": 1571757474,\n  \"updated_on\": 1685247244,\n  \"last_access\": 1685247244,\n  \"ticket_id\": \"1571757474\",\n  \"metadata\": {},\n  \"process_chain_list\": [\n    {\n      \"job_id\": \"226bcb1d-86f6-4948-93bc-8768bd075979\",\n      \"job_code\": \"run_script_py\",\n      \"job_name\": \"ComponentReadCSV15717574740\",\n      \"job_number\": 0,\n      \"executed_on\": 1571757474.3573134,\n      \"progress\": {\n        \"state\": \"SUCCESS\",\n        \"return\": \"result\"\n      }\n    }\n  ],\n  \"progress\": {\n    \"state\": \"SUCCESS\",\n    \"num_of_steps\": 2,\n    \"step\": 2\n  }\n}",
+          "content": "HTTP/1.1 200 OK\n{\n    \"_id\": \"5daf1da2a9f541a00597db3a\",\n    \"api_info\": {\n        \"method\": \"GET\",\n        \"endpoint\": \"0.0.0.0\",\n        \"path\": \"/v2/status\"\n    },\n    \"ticket_id\": \"46884-546541-1456\",\n    \"created_on\": 1571757474,\n    \"updated_on\": 1564464481,\n    \"last_access\": 1564464481,\n    \"process_chain_list\": [\n        {\n            \"job_id\": \"226bcb1d-86f6-4948-93bc-8768bd075979\",\n            \"job_number\": 0,\n            \"task_name\": \"run_script_py\",\n            \"task_data\": \"ComponentReadCSV15717574740\",\n            \"executed_on\": 1571757474.3573134,\n            \"progress\": {\n                \"state\": \"SUCCESS\",\n                \"return\": \"\"\n            },\n            \"metadata\": {}\n        }\n    ],\n    \"progress\": {\n        \"state\": \"SUCCESS\",\n        \"num_of_steps\": 1,\n        \"step\": 1\n    },\n    \"metadata\": {}\n}",
           "type": "json"
         }
       ]
@@ -631,13 +631,6 @@
           },
           {
             "group": "Parameter",
-            "type": "json",
-            "optional": false,
-            "field": "body.meta",
-            "description": "<p>(Optional) metadata to include in the ticket's body</p>"
-          },
-          {
-            "group": "Parameter",
             "type": "json[]",
             "optional": false,
             "field": "body.jobs",
@@ -647,29 +640,36 @@
             "group": "Parameter",
             "type": "String",
             "optional": false,
-            "field": "body.jobs.task",
-            "description": "<p>Job code</p>"
+            "field": "body.jobs.task_name",
+            "description": "<p>Task name (see: /v2/agents)</p>"
           },
           {
             "group": "Parameter",
-            "type": "String",
+            "type": "Object",
             "optional": false,
-            "field": "body.jobs.name",
-            "description": "<p>Name/description of the job</p>"
+            "field": "body.jobs.task_data",
+            "description": "<p>Any necessary information to run the job</p>"
           },
           {
             "group": "Parameter",
-            "type": "String",
+            "type": "json",
             "optional": false,
-            "field": "body.jobs.data",
-            "description": "<p>Any necessary data to run the job</p>"
+            "field": "body.jobs.meta",
+            "description": "<p>(Optional) metadata from the job (such as description)</p>"
+          },
+          {
+            "group": "Parameter",
+            "type": "json",
+            "optional": false,
+            "field": "body.meta",
+            "description": "<p>(Optional) metadata to include in the ticket's body</p>"
           }
         ]
       },
       "examples": [
         {
           "title": "Request body example:",
-          "content": "{\n    meta: {},\n    jobs: [\n        {\n            \"task\":\"name_of_the_task\",\n            \"name\":\"brief description or identifier of the task\",\n            \"data\":\"required metadata to run the task\"\n        }\n    ]\n}",
+          "content": "{\n    jobs: [\n        {\n            \"task_name\":\"print\",\n            \"task_data\":\"required metadata to run the task\",\n            \"meta\": {}\n        }\n    ],\n    meta: {}\n}",
           "type": "json"
         }
       ]
@@ -677,7 +677,7 @@
     "examples": [
       {
         "title": "Example usage:",
-        "content": "curl -X POST \\\n    http://localhost:6565/v2/run \\\n    -H 'x-api-key: CD3DC6F9EC4FCACB9A791CD7D43DD' \\\n    -d '{ \"jobs\": [{\"task\":\"run_script_py\", \"name\":\"print env\", \"data\":\"import os; print(os.environ['\\''HOME'\\''])\"}], \"meta\": {} }'",
+        "content": "curl -X POST \\\n    http://localhost:6565/v2/run \\\n    -H 'x-api-key: CD3DC6F9EC4FCACB9A791CD7D43DD' \\\n    -d '{ \"jobs\": [{\"task_name\":\"run_script_py\", \"task_data\":\"import os; print(os.environ['\\''HOME'\\''])\"}] }'",
         "type": "curl"
       }
     ],
@@ -773,7 +773,7 @@
       "examples": [
         {
           "title": "Success body example:",
-          "content": "HTTP/1.1 200 OK\n{\n  \"_id\": \"5daf1da2a9f541a00597db3a\",\n  \"api_info\": {\n    \"method\": \"GET\",\n    \"endpoint\": \"0.0.0.0\",\n    \"path\": \"/v2/run\"\n  },\n  \"created_on\": 1571757474,\n  \"updated_on\": null,\n  \"last_access\": null,\n  \"ticket_id\": \"1571757474\",\n  \"metadata\": {},\n  \"process_chain_list\": [\n    {\n      \"job_id\": \"226bcb1d-86f6-4948-93bc-8768bd075979\",\n      \"job_code\": \"run_script_py\",\n      \"job_name\": \"ComponentReadCSV15717574740\",\n      \"job_number\": 0,\n      \"executed_on\": 1571757474.3573134,\n      \"progress\": {\n        \"state\": \"PENDING\",\n        \"return\": null\n      }\n    }\n  ],\n  \"progress\": {\n    \"state\": \"PENDING\",\n    \"num_of_steps\": 2,\n    \"step\": 0\n  }\n}",
+          "content": "HTTP/1.1 200 OK\n{\n    \"_id\": \"5daf1da2a9f541a00597db3a\",\n    \"api_info\": {\n        \"method\": \"GET\",\n        \"endpoint\": \"0.0.0.0\",\n        \"path\": \"/v2/run\"\n    },\n    \"ticket_id\": \"46884-546541-1456\",\n    \"created_on\": 1571757474,\n    \"updated_on\": null,\n    \"last_access\": null,\n    \"process_chain_list\": [\n        {\n            \"job_id\": \"226bcb1d-86f6-4948-93bc-8768bd075979\",\n            \"job_number\": 0,\n            \"task_name\": \"run_script_py\",\n            \"task_data\": \"ComponentReadCSV15717574740\",\n            \"executed_on\": 1571757474.3573134,\n            \"progress\": {\n                \"state\": \"PENDING\",\n                \"return\": null\n            },\n            \"metadata\": {}\n        }\n    ],\n    \"progress\": {\n        \"state\": \"PENDING\",\n        \"num_of_steps\": 1,\n        \"step\": 0\n    },\n    \"metadata\": {}\n}",
           "type": "json"
         }
       ]

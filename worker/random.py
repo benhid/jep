@@ -3,16 +3,17 @@ import random
 import time
 import uuid
 
-from celery.signals import worker_ready, worker_shutdown
+from celery.signals import worker_ready, worker_shutdown, heartbeat_sent
 
 from worker import celery_app
 
-AGENT_UNIQUE_ID = uuid.uuid1()
+AGENT_UNIQUE_ID = str(uuid.uuid1())
 EXECUTOR_PLATFORM_ID = os.getenv('EXECUTOR_PLATFORM_ID')
 EXECUTOR_VERSION_ID = os.getenv('EXECUTOR_VERSION_ID')
 
 
 @worker_ready.connect
+@heartbeat_sent.connect
 def register_agent(sender, **k):
     celery_app.signature(
         'join_group',

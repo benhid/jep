@@ -24,7 +24,7 @@ $ ./startup-server.sh
 
 #### Agents
 
-Jobs are executed by Celery *agents*. `startup-agent` is a convenient script to start an agent (inside the [worker](worker) folder): 
+Jobs are executed by Celery *agents*. `startup-agent` is a convenient script to start an agent: 
 
 ```console
 # chmod +x startup-agent.sh

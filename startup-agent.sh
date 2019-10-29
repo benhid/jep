@@ -46,6 +46,8 @@ celery worker \
     -A "$AGENT_NAME" \
     -Q "jobs" \
     -n "${EXECUTOR_PLATFORM_ID}-${EXECUTOR_VERSION_ID}-${AGENT_NAME}" \
+    -Ofair \
+    --heartbeat-interval 60 \
     --pidfile="./${AGENT_NAME}.celeryd.pid" \
     --loglevel=INFO \
     --logfile="./${AGENT_NAME}.celeryd.log" \

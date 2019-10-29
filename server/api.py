@@ -14,8 +14,6 @@ from pyramid.view import view_config
 from server import *
 from server.security import requires_api_key
 
-AVAILABLE_AGENTS = dict()
-
 
 @view_config(
     renderer='json',
@@ -33,29 +31,29 @@ def issue_ticket(request):
 
     @apiHeader {String} x-api-key API unique access-key
     @apiParam {json} body
-    @apiParam {json} body.meta (Optional) metadata to include in the ticket's body
     @apiParam {json[]} body.jobs Jobs list
-    @apiParam {String} body.jobs.task Job code
-    @apiParam {String} body.jobs.name Name/description of the job
-    @apiParam {String} body.jobs.data Any necessary data to run the job
+    @apiParam {String} body.jobs.task_name Task name (see: /v2/agents)
+    @apiParam {Object} body.jobs.task_data Any necessary information to run the job
+    @apiParam {json} body.jobs.meta (Optional) metadata from the job (such as description)
+    @apiParam {json} body.meta (Optional) metadata to include in the ticket's body
 
     @apiParamExample {json} Request body example:
         {
-            meta: {},
             jobs: [
                 {
-                    "task":"name_of_the_task",
-                    "name":"brief description or identifier of the task",
-                    "data":"required metadata to run the task"
+                    "task_name":"print",
+                    "task_data":"required metadata to run the task",
+                    "meta": {}
                 }
-            ]
+            ],
+            meta: {}
         }
 
     @apiExample {curl} Example usage:
         curl -X POST \
             http://localhost:6565/v2/run \
             -H 'x-api-key: CD3DC6F9EC4FCACB9A791CD7D43DD' \
-            -d '{ "jobs": [{"task":"run_script_py", "name":"print env", "data":"import os; print(os.environ['\''HOME'\''])"}], "meta": {} }'
+            -d '{ "jobs": [{"task_name":"run_script_py", "task_data":"import os; print(os.environ['\''HOME'\''])"}] }'
 
     @apiSuccess {json} body
     @apiSuccess {json[]} body.api_info Endpoint details
@@ -73,62 +71,72 @@ def issue_ticket(request):
     @apiSuccessExample {json} Success body example:
         HTTP/1.1 200 OK
         {
-          "_id": "5daf1da2a9f541a00597db3a",
-          "api_info": {
-            "method": "GET",
-            "endpoint": "0.0.0.0",
-            "path": "/v2/run"
-          },
-          "created_on": 1571757474,
-          "updated_on": null,
-          "last_access": null,
-          "ticket_id": "1571757474",
-          "metadata": {},
-          "process_chain_list": [
-            {
-              "job_id": "226bcb1d-86f6-4948-93bc-8768bd075979",
-              "job_code": "run_script_py",
-              "job_name": "ComponentReadCSV15717574740",
-              "job_number": 0,
-              "executed_on": 1571757474.3573134,
-              "progress": {
+            "_id": "5daf1da2a9f541a00597db3a",
+            "api_info": {
+                "method": "GET",
+                "endpoint": "0.0.0.0",
+                "path": "/v2/run"
+            },
+            "ticket_id": "46884-546541-1456",
+            "created_on": 1571757474,
+            "updated_on": null,
+            "last_access": null,
+            "process_chain_list": [
+                {
+                    "job_id": "226bcb1d-86f6-4948-93bc-8768bd075979",
+                    "job_number": 0,
+                    "task_name": "run_script_py",
+                    "task_data": "ComponentReadCSV15717574740",
+                    "executed_on": 1571757474.3573134,
+                    "progress": {
+                        "state": "PENDING",
+                        "return": null
+                    },
+                    "metadata": {}
+                }
+            ],
+            "progress": {
                 "state": "PENDING",
-                "return": null
-              }
-            }
-          ],
-          "progress": {
-            "state": "PENDING",
-            "num_of_steps": 2,
-            "step": 0
-          }
+                "num_of_steps": 1,
+                "step": 0
+            },
+            "metadata": {}
         }
 
     @apiError InternalServerError Input request body does not match template
     """
-
+    # get workflow
     workflow = request.json_body
-    ticket_id = uuid.uuid1()
+    jobs = workflow['jobs']
+    meta = workflow.get('meta', {})
+
+    # get available tasks
+    agents: dict = request.registry.agents
+    available_tasks = sum(agents.values(), [])
+    available_task_names = [t['name'] for t in available_tasks]
+
+    # generate ticket
+    ticket_id = str(uuid.uuid1())
     process_chain_list = []
 
     debug(f'new ticket id {ticket_id}')
 
-    jobs = workflow['jobs']
-    meta = workflow.get('meta', None)
-
     for idx, job in enumerate(jobs):
         try:
-            job_code = job["task"]
-            job_name = job["name"]
-            job_data = job["data"]
-        except Exception:
-            raise
+            task_name = job["task_name"]
+            task_data = job["task_data"]
+            meta = job.get('meta', {})
+        except KeyError as e:
+            raise HTTPBadRequest(f'key {e.args[0]} was not found')
 
-        debug(f'\trunning job {job_name}')
+        if task_name not in available_task_names:
+            raise HTTPBadRequest(f'task {task_name} was not found (no worker available for given task)')
+
+        debug(f'\trunning job {task_name}')
 
         task = celery_app.signature(
-            job_code,
-            kwargs={'data': job_data},
+            task_name,
+            kwargs={'data': task_data},
             queue='jobs'
         ).delay()
 
@@ -136,36 +144,38 @@ def issue_ticket(request):
 
         process_chain_list.append({
             'job_id': str(task.task_id),
-            'job_code': job_code,
-            'job_name': job_name,
             'job_number': idx,
+            'task_name': task_name,
+            'task_data': task_data,
             'executed_on': time.time(),
             'progress': {
                 'state': str(task.status),
                 'return': str(task.result)
-            }
+            },
+            'metadata': meta
         })
 
+    # compose ticket structure
     ticket = {
         'api_info': {'method': 'POST', 'endpoint': API_HOST, 'path': '/v2/run'},
+        'ticket_id': ticket_id,
         'created_on': time.time(),
         'updated_on': time.time(),
         'last_access': None,
-        'ticket_id': ticket_id,
-        'metadata': meta,
         'process_chain_list': process_chain_list,
         'progress': {
             'state': states.PENDING,
             'num_of_steps': len(jobs),  # total number of jobs
             'step': 0  # current job
-        }
+        },
+        'metadata': meta
     }
 
     # insert to database
     database = request.registry.database
     document = database.tickets.insert_one(ticket)
 
-    debug(f'\tstored ticket {document.inserted_id}')
+    debug(f'\tstored ticket {ticket_id} @ {document.inserted_id}')
 
     # serialize ObjectId
     ticket['_id'] = str(ticket['_id'])
@@ -208,39 +218,41 @@ def check_ticket(request):
     @apiSuccessExample {json} Success body example:
         HTTP/1.1 200 OK
         {
-          "_id": "5daf1da2a9f541a00597db3a",
-          "api_info": {
-            "method": "GET",
-            "endpoint": "0.0.0.0",
-            "path": "/v2/status"
-          },
-          "created_on": 1571757474,
-          "updated_on": 1685247244,
-          "last_access": 1685247244,
-          "ticket_id": "1571757474",
-          "metadata": {},
-          "process_chain_list": [
-            {
-              "job_id": "226bcb1d-86f6-4948-93bc-8768bd075979",
-              "job_code": "run_script_py",
-              "job_name": "ComponentReadCSV15717574740",
-              "job_number": 0,
-              "executed_on": 1571757474.3573134,
-              "progress": {
+            "_id": "5daf1da2a9f541a00597db3a",
+            "api_info": {
+                "method": "GET",
+                "endpoint": "0.0.0.0",
+                "path": "/v2/status"
+            },
+            "ticket_id": "46884-546541-1456",
+            "created_on": 1571757474,
+            "updated_on": 1564464481,
+            "last_access": 1564464481,
+            "process_chain_list": [
+                {
+                    "job_id": "226bcb1d-86f6-4948-93bc-8768bd075979",
+                    "job_number": 0,
+                    "task_name": "run_script_py",
+                    "task_data": "ComponentReadCSV15717574740",
+                    "executed_on": 1571757474.3573134,
+                    "progress": {
+                        "state": "SUCCESS",
+                        "return": ""
+                    },
+                    "metadata": {}
+                }
+            ],
+            "progress": {
                 "state": "SUCCESS",
-                "return": "result"
-              }
-            }
-          ],
-          "progress": {
-            "state": "SUCCESS",
-            "num_of_steps": 2,
-            "step": 2
-          }
+                "num_of_steps": 1,
+                "step": 1
+            },
+            "metadata": {}
         }
 
     @apiError BadRequest Ticket identifier not found
     """
+    # get ticket
     ticket_id = request.GET.get('ticket_id', None)
     debug(f'retrieving ticket id {ticket_id}')
 
@@ -249,46 +261,48 @@ def check_ticket(request):
     ticket = database.tickets.find_one({'ticket_id': ticket_id})
 
     if ticket:
+        # update API call info (only the first time by checking last_access)
+        if not ticket['last_access']:
+            ticket['api_info'] = {'method': 'GET', 'endpoint': API_HOST, 'path': '/v2/status'}
+
         # update times
         ticket['last_access'] = ticket['updated_on']
         ticket['updated_on'] = time.time()
-
-        # update API call info
-        ticket['api_info'] = {'method': 'GET', 'endpoint': API_HOST, 'path': '/v2/status'}
 
         # update progress of every job
         jobs = ticket['process_chain_list']
         step = 0
 
         for job in jobs:
-            id = job['job_id']
-            task = AsyncResult(id)
+            job_id = job['job_id']
+            task = AsyncResult(job_id)
 
             try:
-                result = str(task.result)
                 state = task.status
+                result = str(task.result)
             except ConnectionResetError:
                 raise
 
+            # update state
             job['progress']['state'] = state
 
-            # if finished, increase step number and return result
+            # if finished (i.e., state is SUCCESS or FAILURE) increase step number and update return
             if state == states.SUCCESS or state == states.FAILURE:
                 job['progress']['return'] = result
                 step += 1
 
-        # set current step number
+        # update current step number
         ticket['progress']['step'] = step
 
-        # update ticket state
+        # update ticket state if all jobs have finished
         if step == ticket['progress']['num_of_steps']:
-            # if any job is failing, workflow status is FAILURE; otherwise, SUCCESS
+            # if any job has state FAILURE, workflow status is also set to FAILURE; otherwise, SUCCESS
             if any(job['progress']['state'] == states.FAILURE for job in jobs):
                 ticket['progress']['state'] = states.FAILURE
             else:
                 ticket['progress']['state'] = states.SUCCESS
 
-        # update ticket on database
+        # update ticket on database by replacing old values
         database.tickets.replace_one({'ticket_id': ticket_id}, ticket)
     else:
         raise HTTPBadRequest(f'ticket {ticket_id} not found')
@@ -451,11 +465,11 @@ def list_agents(request):
           "agents": {}
         }
     """
-    agents = request.registry.agents
+    agents: dict = request.registry.agents
 
     return {
         'api_info': {'method': 'GET', 'endpoint': API_HOST, 'path': '/v2/agents'},
-        'agents': agents
+        'tasks': sum(agents.values(), [])
     }
 
 
@@ -541,8 +555,12 @@ def unregister_agent(request):
     agent = request.json_body
     agent_id = agent['agent_id']
 
-    agents = request.registry.agents
-    del agents[agent_id]
+    agents: dict = request.registry.agents
+
+    try:
+        del agents[agent_id]
+    except KeyError:
+        raise HTTPBadRequest(f'agent {agent_id} did not exists')
 
     return {
         'api_info': {'method': 'POST', 'endpoint': API_HOST, 'path': '/v2/agent/unregister'},
@@ -607,6 +625,7 @@ if __name__ == '__main__':
 
         config.scan()
 
+        # make WSGI
         app = config.make_wsgi_app()
 
     server = make_server(API_HOST, int(API_PORT), app)
