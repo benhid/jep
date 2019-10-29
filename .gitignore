@@ -109,5 +109,5 @@ venv.bak/
 # database
 db.json
 
-# logs
-*.log
+# Celery workers
+*.celeryd.*

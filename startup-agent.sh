@@ -16,16 +16,10 @@ export CELERY_DB_PASSWORD=${CELERY_DB_PASSWORD:-redis}
 
 AGENT_NAME="$1"
 
-# check if file exists
-if [ ! -f "./worker/${AGENT_NAME}.py" ]; then
-    echo "[AGENT] Agent ${AGENT_NAME} was not found inside /worker"
-    exit 1
-fi
-
 function capture ()
 {
     echo [AGENT] Shutting down agent "$AGENT_NAME"...
-    pkill -f "celery worker -A worker.${AGENT_NAME}"
+    pkill -f "celery worker -A ${AGENT_NAME}"
 
     echo [AGENT] Deleting ${AGENT_NAME}.celeryd.pid file...
     rm -f ./${AGENT_NAME}.celeryd.pid
@@ -42,14 +36,14 @@ function capture ()
 trap "capture" 2
 
 # wait for connection
-echo [AGENT] Waiting for Rabbit instance
+echo [AGENT] Waiting for Celery instance
 ./wait-for-it.sh "${CELERY_BROKER_HOST}:${CELERY_BROKER_PORT}" -t 60
 ./wait-for-it.sh "${CELERY_DB_HOST}:${CELERY_DB_PORT}" -t 60
 
 # start worker on init
 echo [AGENT] Starting agent "$AGENT_NAME"
 celery worker \
-    -A worker."$AGENT_NAME" \
+    -A "$AGENT_NAME" \
     -Q "jobs" \
     -n "${EXECUTOR_PLATFORM_ID}-${EXECUTOR_VERSION_ID}-${AGENT_NAME}" \
     --pidfile="./${AGENT_NAME}.celeryd.pid" \

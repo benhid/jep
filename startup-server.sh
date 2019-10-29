@@ -23,6 +23,13 @@ export CELERY_DB_PASSWORD=${CELERY_DB_PASSWORD:-redis}
 function capture ()
 {
     echo [SERVER] Shutting down server...
+
+    echo [SERVER] Shutting down agent server.manager...
+    pkill -f "celery worker -A server.manager"
+
+    echo [SERVER] Deleting server.manager.celeryd.pid file...
+    rm -f ./server.manager.celeryd.pid
+
     echo [SERVER] ...OK
 
     # exit shell script with error code 2
@@ -38,6 +45,17 @@ trap "capture" 2
 echo [SERVER] Waiting for Rabbit instance
 ./wait-for-it.sh "${CELERY_BROKER_HOST}:${CELERY_BROKER_PORT}" -t 60
 ./wait-for-it.sh "${API_DB_HOST}:${API_DB_PORT}" -t 60
+
+# start manager
+echo [SERVER] Starting agent server.manager
+celery worker \
+    -A server.manager \
+    -Q "events" \
+    -n "server.manager" \
+    --pidfile="./server.manager.celeryd.pid" \
+    --loglevel=INFO \
+    --logfile="./server.manager.celeryd.log" \
+    --detach
 
 # start server on init
 echo [SERVER] Running server

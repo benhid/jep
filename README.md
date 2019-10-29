@@ -4,7 +4,7 @@ Multipurpose jobs executor platform based on Celery.
 This repository provides core components of the platform, specifically:
 
 * REST API for managing jobs and
-* Agent (i.e., workers) for running jobs.
+* Agents for running jobs.
 
 This project requires a running RabbitMQ broker and an instance of MongoDB and Redis to work. 
 You can run RabbitMQ, MongoDB, Redis and Flower using Docker Compose:
@@ -13,6 +13,8 @@ You can run RabbitMQ, MongoDB, Redis and Flower using Docker Compose:
 $ docker-compose up -d
 ``` 
 
+#### Server 
+
 To startup the server, run:
 
 ```console
@@ -20,27 +22,13 @@ To startup the server, run:
 $ ./startup-server.sh
 ```
 
-## Agents
+#### Agents
 
-Jobs are executed by Celery workers. `startup-server` is a convenient script to start a worker within the [worker](worker) folder: 
+Jobs are executed by Celery *agents*. `startup-agent` is a convenient script to start an agent (inside the [worker](worker) folder): 
 
 ```console
 # chmod +x startup-agent.sh
-$ ./startup-agent.sh <filename_of_worker>
-```
-
-## Run jobs
-
-To execute jobs, use the POST endpoint `/v2/run` with a body as follows:
-
-```json
-[
-    {
-        "task":"task id",
-        "name":"brief description or identifier of the job",
-        "data":"required metadata to run the task"
-    }
-]
+$ ./startup-agent.sh worker.web
 ```
 
 ## Generate documentation
@@ -54,5 +42,5 @@ $ npm install apidoc -g
 And then run:
 
 ```console
-$ apidoc -i server/ -o /server/doc
+$ apidoc -i server/ -o server/doc
 ```

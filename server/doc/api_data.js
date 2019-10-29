@@ -1,6 +1,233 @@
 define({ "api": [
   {
     "type": "get",
+    "url": "/v2/agents",
+    "title": "List available agents",
+    "version": "0.1.0",
+    "name": "GetAgents",
+    "group": "Agent",
+    "permission": [
+      {
+        "name": "none"
+      }
+    ],
+    "examples": [
+      {
+        "title": "Example usage:",
+        "content": "curl -X GET \\\n    http://localhost:6565/v2/agents",
+        "type": "curl"
+      }
+    ],
+    "success": {
+      "fields": {
+        "Success 200": [
+          {
+            "group": "Success 200",
+            "type": "json",
+            "optional": false,
+            "field": "body",
+            "description": ""
+          },
+          {
+            "group": "Success 200",
+            "type": "json[]",
+            "optional": false,
+            "field": "body.api_info",
+            "description": "<p>Endpoint details</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "json[]",
+            "optional": false,
+            "field": "body.agents",
+            "description": "<p>List of available agents</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Success body example:",
+          "content": "HTTP/1.1 200 OK\n{\n  \"api_info\": {\n    \"method\": \"GET\",\n    \"endpoint\": \"0.0.0.0\",\n    \"path\": \"/v2/agents\"\n  },\n  \"agents\": {}\n}",
+          "type": "json"
+        }
+      ]
+    },
+    "filename": "server/api.py",
+    "groupTitle": "Agent"
+  },
+  {
+    "type": "post",
+    "url": "/v2/agent/register",
+    "title": "Register a new agent",
+    "version": "0.1.0",
+    "name": "PostRegisterAgent",
+    "group": "Agent",
+    "permission": [
+      {
+        "name": "user"
+      }
+    ],
+    "header": {
+      "fields": {
+        "Header": [
+          {
+            "group": "Header",
+            "type": "String",
+            "optional": false,
+            "field": "x-api-key",
+            "description": "<p>API unique access-key</p>"
+          }
+        ]
+      }
+    },
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "json",
+            "optional": false,
+            "field": "body",
+            "description": ""
+          },
+          {
+            "group": "Parameter",
+            "type": "json",
+            "optional": false,
+            "field": "body.agent_id",
+            "description": "<p>Unique agent identifier</p>"
+          },
+          {
+            "group": "Parameter",
+            "type": "json[]",
+            "optional": false,
+            "field": "body.tasks",
+            "description": "<p>Agent tasks</p>"
+          }
+        ]
+      }
+    },
+    "success": {
+      "fields": {
+        "Success 200": [
+          {
+            "group": "Success 200",
+            "type": "json",
+            "optional": false,
+            "field": "body",
+            "description": ""
+          },
+          {
+            "group": "Success 200",
+            "type": "json",
+            "optional": false,
+            "field": "body.api_info",
+            "description": "<p>Endpoint details</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "body.agent_id",
+            "description": "<p>Unique job identifier</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Success body example:",
+          "content": "HTTP/1.1 200 OK\n{\n  \"api_info\": {\n    \"method\": \"POST\",\n    \"endpoint\": \"0.0.0.0\",\n    \"path\": \"/v2/agent/register \"\n  },\n  \"agent_id\": \"4581666186\"\n}",
+          "type": "json"
+        }
+      ]
+    },
+    "filename": "server/api.py",
+    "groupTitle": "Agent"
+  },
+  {
+    "type": "post",
+    "url": "/v2/agent/unregister",
+    "title": "Un-register an agent",
+    "version": "0.1.0",
+    "name": "PostUnRegisterAgent",
+    "group": "Agent",
+    "permission": [
+      {
+        "name": "user"
+      }
+    ],
+    "header": {
+      "fields": {
+        "Header": [
+          {
+            "group": "Header",
+            "type": "String",
+            "optional": false,
+            "field": "x-api-key",
+            "description": "<p>API unique access-key</p>"
+          }
+        ]
+      }
+    },
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "json",
+            "optional": false,
+            "field": "body",
+            "description": ""
+          },
+          {
+            "group": "Parameter",
+            "type": "json",
+            "optional": false,
+            "field": "body.agent_id",
+            "description": "<p>Unique agent identifier</p>"
+          }
+        ]
+      }
+    },
+    "success": {
+      "fields": {
+        "Success 200": [
+          {
+            "group": "Success 200",
+            "type": "json",
+            "optional": false,
+            "field": "body",
+            "description": ""
+          },
+          {
+            "group": "Success 200",
+            "type": "json",
+            "optional": false,
+            "field": "body.api_info",
+            "description": "<p>Endpoint details</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "body.agent_id",
+            "description": "<p>Unique job identifier</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Success body example:",
+          "content": "HTTP/1.1 200 OK\n{\n  \"api_info\": {\n    \"method\": \"POST\",\n    \"endpoint\": \"0.0.0.0\",\n    \"path\": \"/v2/agent/unregister \"\n  },\n  \"agent_id\": \"4581666186\"\n}",
+          "type": "json"
+        }
+      ]
+    },
+    "filename": "server/api.py",
+    "groupTitle": "Agent"
+  },
+  {
+    "type": "get",
     "url": "/v2/check",
     "title": "Job execution state",
     "version": "0.1.0",
@@ -92,7 +319,7 @@ define({ "api": [
   {
     "type": "post",
     "url": "/v2/kill",
-    "title": "Termine running job",
+    "title": "Kill running job",
     "version": "0.1.0",
     "name": "PostJob",
     "group": "Job",
@@ -251,7 +478,7 @@ define({ "api": [
     "examples": [
       {
         "title": "Example usage:",
-        "content": "curl -X GET \\\n    'http://localhost:6565/v2/status?ticket_id=<ticket_id>'",
+        "content": "curl -X GET \\\n    http://localhost:6565/v2/status?ticket_id=<ticket_id>",
         "type": "curl"
       }
     ],
@@ -270,7 +497,7 @@ define({ "api": [
             "type": "json[]",
             "optional": false,
             "field": "body.api_info",
-            "description": "<p>Unique ticket identifier</p>"
+            "description": "<p>Endpoint details</p>"
           },
           {
             "group": "Success 200",

@@ -1,4 +1,5 @@
 import time
+import uuid
 from wsgiref.simple_server import make_server
 
 from celery import states
@@ -13,10 +14,12 @@ from pyramid.view import view_config
 from server import *
 from server.security import requires_api_key
 
+AVAILABLE_AGENTS = dict()
+
 
 @view_config(
     renderer='json',
-    route_name='run',
+    route_name='workflow/run',
     request_method='POST',
     decorator=requires_api_key
 )
@@ -105,7 +108,7 @@ def issue_ticket(request):
     """
 
     workflow = request.json_body
-    ticket_id = str(int(time.time()))
+    ticket_id = uuid.uuid1()
     process_chain_list = []
 
     debug(f'new ticket id {ticket_id}')
@@ -137,7 +140,7 @@ def issue_ticket(request):
             'job_name': job_name,
             'job_number': idx,
             'executed_on': time.time(),
-            'progress':{
+            'progress': {
                 'state': str(task.status),
                 'return': str(task.result)
             }
@@ -172,7 +175,7 @@ def issue_ticket(request):
 
 @view_config(
     renderer='json',
-    route_name='status',
+    route_name='workflow/status',
     request_method='GET'
 )
 def check_ticket(request):
@@ -190,7 +193,7 @@ def check_ticket(request):
             http://localhost:6565/v2/status?ticket_id=<ticket_id>
 
     @apiSuccess {json} body
-    @apiSuccess {json[]} body.api_info Unique ticket identifier
+    @apiSuccess {json[]} body.api_info Endpoint details
     @apiSuccess {String} body.ticket_id Unique ticket identifier
     @apiSuccess {Date} body.created_on Ticket creation date
     @apiSuccess {Date} body.updated_on 
@@ -298,7 +301,7 @@ def check_ticket(request):
 
 @view_config(
     renderer='json',
-    route_name='check',
+    route_name='job/check',
     request_method='GET'
 )
 def check_job(request):
@@ -358,7 +361,7 @@ def check_job(request):
 
 @view_config(
     renderer='json',
-    route_name='kill',
+    route_name='job/kill',
     request_method='POST',
     decorator=requires_api_key
 )
@@ -418,6 +421,137 @@ def kill_job(request):
 
 @view_config(
     renderer='json',
+    route_name='agents',
+    request_method='GET'
+)
+def list_agents(request):
+    """
+    @api {get} /v2/agents List available agents
+    @apiVersion 0.1.0
+    @apiName GetAgents
+    @apiGroup Agent
+    @apiPermission none
+
+    @apiExample {curl} Example usage:
+        curl -X GET \
+            http://localhost:6565/v2/agents
+
+    @apiSuccess {json} body
+    @apiSuccess {json[]} body.api_info Endpoint details
+    @apiSuccess {json[]} body.agents List of available agents
+
+    @apiSuccessExample {json} Success body example:
+        HTTP/1.1 200 OK
+        {
+          "api_info": {
+            "method": "GET",
+            "endpoint": "0.0.0.0",
+            "path": "/v2/agents"
+          },
+          "agents": {}
+        }
+    """
+    agents = request.registry.agents
+
+    return {
+        'api_info': {'method': 'GET', 'endpoint': API_HOST, 'path': '/v2/agents'},
+        'agents': agents
+    }
+
+
+@view_config(
+    renderer='json',
+    route_name='agent/register',
+    request_method='POST',
+    decorator=requires_api_key
+)
+def register_agent(request):
+    """
+    @api {post} /v2/agent/register Register a new agent
+    @apiVersion 0.1.0
+    @apiName PostRegisterAgent
+    @apiGroup Agent
+    @apiPermission user
+
+    @apiHeader {String} x-api-key API unique access-key
+    @apiParam {json} body
+    @apiParam {json} body.agent_id Unique agent identifier
+    @apiParam {json[]} body.tasks Agent tasks
+
+    @apiSuccess {json} body
+    @apiSuccess {json} body.api_info Endpoint details
+    @apiSuccess {String} body.agent_id Unique job identifier
+    @apiSuccessExample {json} Success body example:
+        HTTP/1.1 200 OK
+        {
+          "api_info": {
+            "method": "POST",
+            "endpoint": "0.0.0.0",
+            "path": "/v2/agent/register "
+          },
+          "agent_id": "4581666186"
+        }
+    """
+    agent = request.json_body
+    agent_id = agent['agent_id']
+    agent_tasks = agent['tasks']
+
+    # register agent
+    agents = request.registry.agents
+    agents[agent_id] = agent_tasks
+
+    return {
+        'api_info': {'method': 'POST', 'endpoint': API_HOST, 'path': '/v2/agent/register'},
+        'agent_id': agent['agent_id'],
+    }
+
+
+@view_config(
+    renderer='json',
+    route_name='agent/unregister',
+    request_method='POST',
+    decorator=requires_api_key
+)
+def unregister_agent(request):
+    """
+    @api {post} /v2/agent/unregister Un-register an agent
+    @apiVersion 0.1.0
+    @apiName PostUnRegisterAgent
+    @apiGroup Agent
+    @apiPermission user
+
+    @apiHeader {String} x-api-key API unique access-key
+    @apiParam {json} body
+    @apiParam {json} body.agent_id Unique agent identifier
+
+    @apiSuccess {json} body
+    @apiSuccess {json} body.api_info Endpoint details
+    @apiSuccess {String} body.agent_id Unique job identifier
+    @apiSuccessExample {json} Success body example:
+        HTTP/1.1 200 OK
+        {
+          "api_info": {
+            "method": "POST",
+            "endpoint": "0.0.0.0",
+            "path": "/v2/agent/unregister "
+          },
+          "agent_id": "4581666186"
+        }
+    """
+    agent = request.json_body
+    agent_id = agent['agent_id']
+
+    agents = request.registry.agents
+    del agents[agent_id]
+
+    return {
+        'api_info': {'method': 'POST', 'endpoint': API_HOST, 'path': '/v2/agent/unregister'},
+        'agent_id': agent['agent_id'],
+    }
+
+
+@view_config(
+    renderer='json',
     route_name='health',
     request_method='GET'
 )
@@ -449,14 +583,26 @@ if __name__ == '__main__':
         # register database
         config.registry.database = client['je-database']
 
-        # serve html
+        # add routes
+        #  serve html (docs)
         config.add_static_view('docs', 'doc/', cache_max_age=3600)
 
-        # add routes
-        config.add_route('run', '/v2/run')
-        config.add_route('status', '/v2/status')
-        config.add_route('check', '/v2/check')
-        config.add_route('kill', '/v2/kill')
+        #  workflow
+        config.add_route('workflow/run', '/v2/run')
+        config.add_route('workflow/status', '/v2/status')
+
+        #  jobs
+        config.add_route('job/check', '/v2/check')
+        config.add_route('job/kill', '/v2/kill')
+
+        #  agents manager
+        config.registry.agents = dict()
+
+        config.add_route('agents', '/v2/agents')
+        config.add_route('agent/register', '/v2/agent/register')
+        config.add_route('agent/unregister', '/v2/agent/unregister')
+
+        #  others
         config.add_route('health', '/v2/health')
 
         config.scan()
