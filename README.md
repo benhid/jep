@@ -43,12 +43,6 @@ To execute jobs, use the POST endpoint `/v2/run` with a body as follows:
 ]
 ```
 
-For example, the [executor](worker/executor.py) worker will be used to run Python scrips:
-
-```console
-$ ./startup-agent.sh executor
-```
-
 ## Generate documentation
 
 Install APIDOC as follows:

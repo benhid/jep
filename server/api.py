@@ -14,18 +14,6 @@ from server import *
 from server.security import requires_api_key
 
 
-AVAILABLE_TASKS = []
-
-
-@celery_app.task(name='join_group', bind=True)
-def process_script(self, data):
-    conn = celery_app.connection()
-    chann = conn.channel()
-    chann.queue_declare('state')
-    chann.basic_consume()
-    print(data)
-
-
 @view_config(
     renderer='json',
     route_name='run',
@@ -376,7 +364,7 @@ def check_job(request):
 )
 def kill_job(request):
     """
-    @api {post} /v2/kill Termine running job
+    @api {post} /v2/kill Kill running job
     @apiVersion 0.1.0
     @apiName PostJob
     @apiGroup Job
