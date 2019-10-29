@@ -125,7 +125,7 @@ def issue_ticket(request):
         try:
             task_name = job["task_name"]
             task_data = job["task_data"]
-            meta = job.get('meta', {})
+            job_meta = job.get('meta', {})
         except KeyError as e:
             raise HTTPBadRequest(f'key {e.args[0]} was not found')
 
@@ -152,7 +152,7 @@ def issue_ticket(request):
                 'state': str(task.status),
                 'return': str(task.result)
             },
-            'metadata': meta
+            'metadata': job_meta
         })
 
     # compose ticket structure
