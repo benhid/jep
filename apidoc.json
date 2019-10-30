@@ -1,5 +1,5 @@
 {
-  "name": "JE Platform",
+  "name": "JEPlatform",
   "version": "0.1.0",
   "description": "Multipurpose jobs executor platform based on Celery",
   "title": "Multipurpose jobs executor platform based on Celery",

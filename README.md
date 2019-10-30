@@ -1,6 +1,6 @@
-![JE platform logo](/assets/logo.png)
+![JEPlatform logo](/assets/logo.png)
 
-Multipurpose jobs executor platform based on Celery. 
+Multipurpose **j**obs **e**xecutor **p**latform based on Celery. 
 This repository provides core components of the platform, specifically:
 
 * REST API for managing jobs and
