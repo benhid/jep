@@ -34,19 +34,19 @@ def issue_ticket(request):
     @apiParam {json[]} body.jobs Jobs list
     @apiParam {String} body.jobs.task_name Task name (see: /v2/agents)
     @apiParam {Object} body.jobs.task_data Any necessary information to run the job
-    @apiParam {json} body.jobs.meta (Optional) metadata from the job (such as description)
+    @apiParam {json} body.jobs.meta (Optional) metadata of the job (such as description)
     @apiParam {json} body.meta (Optional) metadata to include in the ticket's body
 
     @apiParamExample {json} Request body example:
         {
-            jobs: [
+            "jobs": [
                 {
                     "task_name":"print",
                     "task_data":"required metadata to run the task",
                     "meta": {}
                 }
             ],
-            meta: {}
+            "meta": {}
         }
 
     @apiExample {curl} Example usage:

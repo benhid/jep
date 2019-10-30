@@ -655,7 +655,7 @@ define({ "api": [
             "type": "json",
             "optional": false,
             "field": "body.jobs.meta",
-            "description": "<p>(Optional) metadata from the job (such as description)</p>"
+            "description": "<p>(Optional) metadata of the job (such as description)</p>"
           },
           {
             "group": "Parameter",
@@ -669,7 +669,7 @@ define({ "api": [
       "examples": [
         {
           "title": "Request body example:",
-          "content": "{\n    jobs: [\n        {\n            \"task_name\":\"print\",\n            \"task_data\":\"required metadata to run the task\",\n            \"meta\": {}\n        }\n    ],\n    meta: {}\n}",
+          "content": "{\n    \"jobs\": [\n        {\n            \"task_name\":\"print\",\n            \"task_data\":\"required metadata to run the task\",\n            \"meta\": {}\n        }\n    ],\n    \"meta\": {}\n}",
           "type": "json"
         }
       ]
