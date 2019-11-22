@@ -269,38 +269,40 @@ def check_ticket(request):
         ticket['last_access'] = ticket['updated_on']
         ticket['updated_on'] = time.time()
 
-        # update progress of every job
-        jobs = ticket['process_chain_list']
-        step = 0
+        # we will only update still PENDING tickets
+        if ticket['progress']['state'] == states.PENDING:
+            # update progress of every job
+            jobs = ticket['process_chain_list']
+            step = 0
 
-        for job in jobs:
-            job_id = job['job_id']
-            task = AsyncResult(job_id)
+            for job in jobs:
+                job_id = job['job_id']
+                task = AsyncResult(job_id)
 
-            try:
-                state = task.status
-                result = str(task.result)
-            except ConnectionResetError:
-                raise
+                try:
+                    state = task.status
+                    result = str(task.result)
+                except ConnectionResetError:
+                    raise
 
-            # update state
-            job['progress']['state'] = state
+                # update state
+                job['progress']['state'] = state
 
-            # if finished (i.e., state is SUCCESS or FAILURE) increase step number and update return
-            if state == states.SUCCESS or state == states.FAILURE:
-                job['progress']['return'] = result
-                step += 1
+                # if finished (i.e., state is SUCCESS or FAILURE) increase step number and update return
+                if state == states.SUCCESS or state == states.FAILURE:
+                    job['progress']['return'] = result
+                    step += 1
 
-        # update current step number
-        ticket['progress']['step'] = step
+            # update current step number
+            ticket['progress']['step'] = step
 
-        # update ticket state if all jobs have finished
-        if step == ticket['progress']['num_of_steps']:
-            # if any job has state FAILURE, workflow status is also set to FAILURE; otherwise, SUCCESS
-            if any(job['progress']['state'] == states.FAILURE for job in jobs):
-                ticket['progress']['state'] = states.FAILURE
-            else:
-                ticket['progress']['state'] = states.SUCCESS
+            # update ticket state if all jobs have finished
+            if step == ticket['progress']['num_of_steps']:
+                # if any job has state FAILURE, workflow status is also set to FAILURE; otherwise, SUCCESS
+                if any(job['progress']['state'] == states.FAILURE for job in jobs):
+                    ticket['progress']['state'] = states.FAILURE
+                else:
+                    ticket['progress']['state'] = states.SUCCESS
 
         # update ticket on database by replacing old values
         database.tickets.replace_one({'ticket_id': ticket_id}, ticket)
