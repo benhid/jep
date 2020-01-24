@@ -14,6 +14,10 @@ export CELERY_DB_PORT=${CELERY_DB_PORT:-6379}
 export CELERY_DB_USERNAME=${CELERY_DB_USERNAME:-redis}
 export CELERY_DB_PASSWORD=${CELERY_DB_PASSWORD:-redis}
 
+export HADOOP_HOME="/home/antonio/Software/hadoop-3.2.0"
+export JAVA_HOME="/home/antonio/Software/jdk1.8.0_231"
+export ARROW_LIBHDFS_DIR="/home/antonio/Software/hadoop-3.2.0/lib"
+
 AGENT_NAME="$1"
 
 function capture ()
@@ -51,7 +55,8 @@ celery worker \
     --pidfile="./${AGENT_NAME}.celeryd.pid" \
     --loglevel=INFO \
     --logfile="./${AGENT_NAME}.celeryd.log" \
-    --detach
+    --detach \
+    --concurrency=25
 
 sleep 5
 
