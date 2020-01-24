@@ -31,6 +31,9 @@ Jobs are executed by Celery *agents*. `startup-agent` is a convenient script to 
 $ ./startup-agent.sh worker.web
 ```
 
+**Note** Sometimes, Celery worker may be working on the background after its shutdown and generate zombie processes.
+Use `pkill -f "celery worker"` to stop all running workers.
+
 ## Generate documentation
 
 Install APIDOC as follows:
