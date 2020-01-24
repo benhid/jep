@@ -43,7 +43,7 @@ def unregister_agent(sender, **k):
     return f'agent disconnected from queue {EXECUTOR_PLATFORM_ID}-{EXECUTOR_VERSION_ID}'
 
 
-@celery_app.task(name='run_script_py', track_started=True, default_retry_delay=2, max_retries=3, acks_late=True,
+@celery_app.task(name='run_script_py', track_started=True, time_limit=240, default_retry_delay=1, max_retries=2, acks_late=True,
                  bind=True)
 def process_script(self, data):
     try:
