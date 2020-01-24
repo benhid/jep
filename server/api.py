@@ -103,7 +103,8 @@ def issue_ticket(request):
             "metadata": {}
         }
 
-    @apiError InternalServerError Input request body does not match template
+    @apiError HTTPBadRequest key {key} was not found
+    @apiError HTTPBadRequest no worker available for given task
     """
     # get workflow
     workflow = request.json_body
@@ -130,9 +131,9 @@ def issue_ticket(request):
             raise HTTPBadRequest(f'key {e.args[0]} was not found')
 
         if task_name not in available_task_names:
-            raise HTTPBadRequest(f'task {task_name} was not found (no worker available for given task)')
+            raise HTTPBadRequest(f'no worker available for given task')
 
-        debug(f'\trunning job {task_name}')
+        debug(f'\trunning job {task_name} with args: {task_data}')
 
         task = celery_app.signature(
             task_name,
@@ -140,7 +141,7 @@ def issue_ticket(request):
             queue='jobs'
         ).delay()
 
-        debug('\tadding job to process chain list')
+        debug(f'\tadding job {task} to process chain list')
 
         process_chain_list.append({
             'job_id': str(task.task_id),
@@ -250,7 +251,8 @@ def check_ticket(request):
             "metadata": {}
         }
 
-    @apiError BadRequest Ticket identifier not found
+    @apiError HTTPBadRequest ticket {identifier} not found
+    @apiError ConnectionResetError
     """
     # get ticket
     ticket_id = request.GET.get('ticket_id', None)
@@ -299,7 +301,7 @@ def check_ticket(request):
             # update ticket state if all jobs have finished
             if step == ticket['progress']['num_of_steps']:
                 # if any job has state FAILURE, workflow status is also set to FAILURE; otherwise, SUCCESS
-                if any(job['progress']['state'] == states.FAILURE for job in jobs):
+                if any(job['progress']['state'] in [states.FAILURE, states.REVOKED] for job in jobs):
                     ticket['progress']['state'] = states.FAILURE
                 else:
                     ticket['progress']['state'] = states.SUCCESS
@@ -355,6 +357,8 @@ def check_job(request):
             "return": ""
           }
         }
+
+    @apiError ConnectionResetError
     """
     job_id = request.GET.get('job_id', '0')
     task = AsyncResult(job_id)
@@ -553,6 +557,8 @@ def unregister_agent(request):
           },
           "agent_id": "4581666186"
         }
+
+    @apiError HTTPBadRequest agent {identifier} do not exists
     """
     agent = request.json_body
     agent_id = agent['agent_id']
@@ -562,7 +568,7 @@ def unregister_agent(request):
     try:
         del agents[agent_id]
     except KeyError:
-        raise HTTPBadRequest(f'agent {agent_id} did not exists')
+        raise HTTPBadRequest(f'agent {agent_id} do not exists')
 
     return {
         'api_info': {'method': 'POST', 'endpoint': API_HOST, 'path': '/v2/agent/unregister'},
